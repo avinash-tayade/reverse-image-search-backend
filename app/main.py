@@ -1,35 +1,38 @@
 import os
 import shutil
 import uuid
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # allow frontend from anywhere
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-UPLOAD_DIR = "Uploads"
+UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@app.get("/")
+def health():
+    return {"status": "Backend running"}
 
 @app.post("/search/")
 async def search(image: UploadFile = File(...)):
-    file_ext = os.path.splitext(image.filename)[-1]
-    file_name = f"{uuid.uuid4().hex}{file_ext}"
-    file_path = os.path.join(UPLOAD_DIR, file_name)
+    ext = os.path.splitext(image.filename)[-1]
+    filename = f"{uuid.uuid4().hex}{ext}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
 
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(image.file, buffer)
+    with open(filepath, "wb") as f:
+        shutil.copyfileobj(image.file, f)
 
     return JSONResponse({
-        "query_filename": image.filename,
-        "google_search_url": "https://www.google.com/imghp"
+        "filename": image.filename,
+        "google_lens_url": "https://lens.google.com/upload",
+        "google_images_url": "https://www.google.com/imghp",
+        "note": "Upload the same image to view results"
     })
-
-app.mount("/Uploads", StaticFiles(directory=UPLOAD_DIR), name="Uploads")
