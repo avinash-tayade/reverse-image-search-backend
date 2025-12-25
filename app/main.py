@@ -7,6 +7,10 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
+@app.get("/")
+def root():
+    return {"message": "Reverse Image Search Backend is running 🚀"}
+
 
 # CORS (allow frontend)
 app.add_middleware(
