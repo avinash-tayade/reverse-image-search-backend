@@ -8,10 +8,10 @@ from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 
-# ✅ CORS (allow frontend domains later)
+# CORS (allow frontend)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # safe for demo; restrict later if needed
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -20,20 +20,20 @@ app.add_middleware(
 UPLOAD_DIR = "Uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# Render will inject this
+BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
+
 @app.post("/search/")
 async def search(image: UploadFile = File(...)):
     try:
-        file_ext = os.path.splitext(image.filename)[-1]
-        file_name = f"{uuid.uuid4().hex}{file_ext}"
-        file_path = os.path.join(UPLOAD_DIR, file_name)
+        ext = os.path.splitext(image.filename)[-1]
+        filename = f"{uuid.uuid4().hex}{ext}"
+        file_path = os.path.join(UPLOAD_DIR, filename)
 
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
 
-        # ✅ Render provides this via environment variable
-        BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
-
-        image_url = f"{BASE_URL}/Uploads/{file_name}"
+        image_url = f"{BASE_URL}/Uploads/{filename}"
 
         google_link = f"https://lens.google.com/uploadbyurl?url={image_url}"
 
@@ -41,11 +41,11 @@ async def search(image: UploadFile = File(...)):
             "query_filename": image.filename,
             "query_image_url": image_url,
             "google_search_url": google_link,
-            "matches": []
+            "status": "success"
         })
 
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
-# ✅ Serve uploaded images
+# Serve uploaded images
 app.mount("/Uploads", StaticFiles(directory=UPLOAD_DIR), name="Uploads")
