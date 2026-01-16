@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment variables
+.env
+
+# AWS / secrets
+.aws/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Uploads (optional but recommended)
+Uploads/
